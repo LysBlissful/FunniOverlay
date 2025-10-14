@@ -156,11 +156,11 @@ export default class AnimationManager {
 	 * Creates an animation from a range of frames
 	 * @param {string} name Animation name
 	 * @param {number} fps Frames per second
-	 * @param {boolean} loop Whether it should loop
 	 * @param {number} start Start frame index
 	 * @param {number} end End frame index
+	 * @param {boolean} loop Whether it should loop
 	 */
-	createAnimation(name, fps, loop, start, end) {
+	createAnimation(name, fps, start, end, loop = false) {
 		const frames = [];
 		for (let i = start; i <= end; i++) {
 			frames.push(i);
