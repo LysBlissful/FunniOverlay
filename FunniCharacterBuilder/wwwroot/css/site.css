@@ -20,3 +20,8 @@ html {
 body {
   margin-bottom: 60px;
 }
+canvas {
+    border: solid 2px black;
+    height: 500px;
+    width: 500px;
+}
