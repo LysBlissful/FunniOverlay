@@ -51,6 +51,13 @@ parts.forEach((a, k) => {
 
 document.querySelectorAll(".input-group.mb-3").forEach(input => {
     const sel = input.querySelector("select");
+    const buttons = input.querySelectorAll("button");
+    buttons.forEach(b => {
+        b.addEventListener("click", () => {
+            sel.selectedIndex = 0;
+            character.set(input.id, null);
+        });
+    });
     Array.from(parts.get(input.id).animations.keys()).forEach((v) => {
         const option = document.createElement("option");
         option.value = v;
@@ -61,6 +68,8 @@ document.querySelectorAll(".input-group.mb-3").forEach(input => {
        const part = parts.get(input.id);
        if (part !== undefined && part.animations.has(sel.value))
            part.play(sel.value);
+       else
+           character.set(input.id, null);
     }) 
 });
 
