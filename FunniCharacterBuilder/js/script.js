@@ -10,6 +10,51 @@ body.src = "../img/spriteSheets/body.png";
 const timer = new Timer(1000 / 60);
 timer.tick.add(draw)
 
+const cosmetics = new Map([
+   ["clothing", [
+      "bronzeBreastplate",
+      "kimono",
+      "monkRobes",
+      "theMightyBowl"
+   ]],
+   ["eyeShape", [
+      "angyEyes",
+      "coolGlasses",
+      "sadgeEyes"
+   ]],
+   ["headwear", [
+      "demonHorns",
+      "karateHeadband",
+      "off-colorFlamingo",
+      "vikingHelmet",
+      "unwashedSonicHair",
+   ]],
+   ["mouthShape", [
+      "canadian",
+      "dColon",
+      "lookAtThisGuySmile",
+      "oMouth",
+      "shitEatingGrin",
+      "threeSmile",
+      "toothySmirk"
+   ]],
+   ["noseShape", [
+      "cthulu",
+      "downturnedPointyNose",
+      "gobbinNose",
+      "pointyNose",
+      "ratNose",
+      "roundNose",
+      "skullNose",
+      "stubbyBeak",
+      "thiccNose",
+      "upturnedNose",
+      "wideNose",
+      "widePointyNose"
+   ]]
+]);
+
+
 const parts = new Map([
    ["clothing", new AnimationManager("../img/spriteSheets/clothing.png", 4, 1)],
    ["eyeShape", new AnimationManager("../img/spriteSheets/eyeShapes.png", 4, 1)],
@@ -29,15 +74,14 @@ const character = new Map([
    ["noseShape", null]
 ]);
 
-createParts("clothing", 4);
-createParts("eyeShape", 3);
-createParts("headwear", 5);
-createParts("mouthShape", 7);
-createParts("noseShape", 12);
-createParts("shellColor", 13);
+createParts("clothing");
+createParts("eyeShape");
+createParts("headwear");
+createParts("mouthShape");
+createParts("noseShape");
 
-function createParts(category, count) {
-   for (let i = 0; i < count; i++) {
+function createParts(category,) {
+   for (let i = 0; i < cosmetics.get(category).length; i++) {
       parts.get(category).createAnimation(i.toString(), 1, i, i);
       console.log(category);
    }
@@ -61,7 +105,7 @@ document.querySelectorAll(".input-group.mb-3").forEach(input => {
     Array.from(parts.get(input.id).animations.keys()).forEach((v) => {
         const option = document.createElement("option");
         option.value = v;
-        option.text = v;
+        option.text = cosmetics.get(input.id)[Number(v)];
         sel.append(option);
     });
     sel.addEventListener("change", () => {
