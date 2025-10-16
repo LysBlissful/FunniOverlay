@@ -63,9 +63,10 @@ const parts = new Map([
    ["noseShape", new AnimationManager("../img/spriteSheets/noseShapes.png", 4, 3)],
    ["shellColor", new AnimationManager("../img/spriteSheets/shellColor.png", 4, 4)] 
 ]);
-
+const shellColor =  new AnimationManager("../img/spriteSheets/shellColor.png", 4, 4);
+shellColor.createAnimation("0", 1, 0, 0);
+shellColor.play("0");
 const character = new Map([
-   ["shellColor", null],
    ["body", body],
    ["clothing", null],
    ["eyeShape", null],
@@ -92,37 +93,57 @@ parts.forEach((a, k) => {
       character.set(k, a.sprite);
    })
 })
+const color = document.querySelector("input[type='color']");
 
 document.querySelectorAll(".input-group.mb-3").forEach(input => {
-    const sel = input.querySelector("select");
-    const buttons = input.querySelectorAll("button");
-    buttons.forEach(b => {
-        b.addEventListener("click", () => {
-            sel.selectedIndex = 0;
-            character.set(input.id, null);
-        });
-    });
-    Array.from(parts.get(input.id).animations.keys()).forEach((v) => {
-        const option = document.createElement("option");
-        option.value = v;
-        option.text = cosmetics.get(input.id)[Number(v)];
-        sel.append(option);
-    });
-    sel.addEventListener("change", () => {
-       const part = parts.get(input.id);
-       if (part !== undefined && part.animations.has(sel.value))
-           part.play(sel.value);
-       else
-           character.set(input.id, null);
-    }) 
+   const sel = input.querySelector("select");
+   if (sel == null)
+      return;
+   const buttons = input.querySelectorAll("button");
+   buttons.forEach(b => {
+      b.addEventListener("click", () => {
+         sel.selectedIndex = 0;
+         character.set(input.id, null);
+      });
+   });
+   Array.from(parts.get(input.id).animations.keys()).forEach((v) => {
+      const option = document.createElement("option");
+      option.value = v;
+      option.text = cosmetics.get(input.id)[Number(v)];
+      sel.append(option);
+   });
+   sel.addEventListener("change", () => {
+      const part = parts.get(input.id);
+      if (part !== undefined && part.animations.has(sel.value))
+         part.play(sel.value);
+      else
+         character.set(input.id, null);
+   })
 });
 
 function draw() {
    ctx.clearRect(0, 0, canvas.width, canvas.height);
-   character.forEach(p => {
+
+   if (shellColor.sprite != null) {
+      ctx.drawImage(shellColor.sprite, 0, 0);
+   }
+
+   // Set global blend mode to colorize
+   ctx.globalCompositeOperation = 'source-atop';
+   
+   // Fill with the tint color
+   ctx.fillStyle = color.value;
+   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+   // Reset blend mode to default
+   ctx.globalCompositeOperation = 'source-over';
+
+   character.forEach((p, i) => {
       if(p !== null)
          ctx.drawImage(p, 0, 0);
    })
+
+   
 }
 
 timer.start();
