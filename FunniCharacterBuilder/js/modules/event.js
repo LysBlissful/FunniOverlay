@@ -1,6 +1,7 @@
 /** @template T, U */
 export default class Event {
 
+
     /** @type {((obj: T, args: U?) => void)[]} */
     #eventListeners = [];
 
