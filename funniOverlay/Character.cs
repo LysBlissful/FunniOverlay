@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 namespace funniOverlay
 {
     internal class Character
@@ -13,8 +14,13 @@ namespace funniOverlay
         private int RandomMode { get; set; }
         private Rectangle[] Hitboxes { get; set; }
         private int AITimer { get; set; }
+        private int IdleClock { get; set; }
+        
+        private int OriginalY = 0;
+
 
         public Color ShellColor { get; set; }
+        public int DirectionMod { get; set; }
         public Rectangle Body { get; set; }
         public Rectangle HeadGear { get; set; }
         public Rectangle Clothing { get; set; }
@@ -22,10 +28,13 @@ namespace funniOverlay
         public Rectangle Eyes {  get; set; }
         public Rectangle Mouth { get; set; }
         public Rectangle Shell {  get; set; }
+
+
         public Point Position { get; set; }
         public int Size {  get; set; }
-        
+        public float TextureAngle { get; private set; }
         public int HP { get; private set; }
+        public int Screenwidth { private get; set; }
         public int ActionSpeed {  get; set; }
         public string AI {  get; set; }
 
@@ -37,7 +46,8 @@ namespace funniOverlay
             ActionSpeed = 0;
             AI = "lolsorandom";
             RandomMode = 0;
-            Body = new Rectangle(new Random().Next(0, 1800), Size, Size, Size);
+            Body = new Rectangle(Position.X, Position.Y, Size, Size);
+            OriginalY = Position.Y;
             HeadGear = new Rectangle(0, 0 , Size, Size);
             Clothing = new Rectangle(0, 0, Size, Size);
             Nose = new Rectangle(0, 0, Size, Size);
@@ -45,8 +55,11 @@ namespace funniOverlay
             Mouth = new Rectangle(0, 0, Size, Size);
             Shell = new Rectangle(0, 0, Size, Size);
             ShellColor = new Color(255, 255, 255);
+            IdleClock = 0;
+            Screenwidth = 1920;
+            DirectionMod = 1;
         }
-        public Character(Rectangle body, Rectangle headGear, Rectangle clothing, Rectangle nose, Rectangle eyes, Rectangle mouth, Rectangle shell, Point position, int hP, int actionSpeed, int size)
+        public Character(Rectangle body, Rectangle headGear, Rectangle clothing, Rectangle nose, Rectangle eyes, Rectangle mouth, Rectangle shell, Point position, int hP, int actionSpeed, int size, int screenwidth)
         {
             Body = body;
             HeadGear = headGear;
@@ -56,18 +69,68 @@ namespace funniOverlay
             Mouth = mouth;
             Shell = shell;
             Position = position;
+            OriginalY = Position.Y;
             HP = hP;
             ActionSpeed = actionSpeed;
             Size = size;
             RandomMode = 0;
-
+            IdleClock = 0;
+            Screenwidth = screenwidth;
+            DirectionMod = 1;
             //usable code, hitboxoffsettop is the step to take to make egg shaped 7 part hitbox from the top, bottom is its bottom counterpart. use hitboxoffsettop x for distance from top
             //and hitboxoffsettop y for distance from bottom
             /*Point HitboxOffsetTop = new Point(Convert.ToInt32(.06 * Size), Convert.ToInt32(.07 * Size));
             Point HitboxOffsetBottom = new Point(Convert.ToInt32(.06 * Size), Convert.ToInt32(.04 * Size));
             Point MaximumBounds = new Point(Convert.ToInt32(Size * .9), Convert.ToInt32(Size * .75));*/
-            
+
         }
+        //used out of combat
+        public void Idle()
+        {
+            Random rnd = new Random();
+            if (IdleClock < 300)
+            {
+                IdleClock++;
+                WeebleWobble();
+            }
+            else if (IdleClock < 1200)
+            {
+                if (rnd.Next(0, 600) > 598)
+                {
+                    IdleClock = 1200;
+                }
+                else IdleClock++;
+                WeebleWobble();
+            }
+            if(IdleClock >= 1200)
+            {
+                
+                if(IdleClock == 1200)
+                {
+                    TextureAngle = 0;
+                    if (Position.X > (Screenwidth / 2 + rnd.Next(-500, 500)))
+                    {
+                        DirectionMod = -1;
+                    }
+                    else DirectionMod = 1;
+                }
+                IdleClock++;
+                Position = new Point(Position.X + (2 * DirectionMod), Position.Y);
+                Body = new Rectangle(Position.X, Position.Y, Body.Width, Body.Height);
+                if (IdleClock >= 1300 + rnd.Next(0, 700)) IdleClock = 0;
+            }
+        }
+        private void WeebleWobble()
+        {
+            if (IdleClock % 6 == 0)
+            {
+                TextureAngle = (float)Math.Sin(IdleClock / 6)/2;
+                //Position = new Point(Position.X, (int)(99 * Math.Sin(TextureAngle / 2) - (Math.Abs(16 * Math.Sin(TextureAngle)))) * DirectionMod + OriginalY);
+                //Body = new Rectangle(Position.X, Position.Y, Body.Width, Body.Height);
+            }
+           
+        }
+        //used in combat
         public void LifeTick()
         {
             AITimer++;
