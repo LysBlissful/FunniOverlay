@@ -61,12 +61,12 @@ export default class CharacterEditor {
 		// Add setup and draw callbacks to the load event
 		this.#load.add(
 			this.#setupOptions.bind(this), 
-			() => setInterval(this.draw.bind(this), 1000 / 60) // 60 FPS draw loop
+			() => setInterval(this.#draw.bind(this), 1000 / 60) // 60 FPS draw loop
 		);
 
 		// Ensure UI label alignment and start asset loading
 		this.#setLabelsWidth();
-		this.loadContent();
+		this.#loadContent();
 
 		// Initialize color from input element
 		// @ts-ignore
@@ -80,7 +80,7 @@ export default class CharacterEditor {
 	 * @async
 	 * @returns {Promise<void>} 
 	 */
-	async loadContent() {
+	async #loadContent() {
 		await Promise.all([
 			this.#loadBody(),
 			this.#loadCosmetics(),
@@ -233,7 +233,7 @@ export default class CharacterEditor {
 	 * Renders the character onto the canvas.
 	 * Handles layering, tint color, and all selected parts.
 	 */
-	draw() {
+	#draw() {
 		const ctx = this.#ctx;
 		const canvas = this.#canvas;
 
