@@ -150,7 +150,8 @@ namespace funniOverlay
         List<Entity> Spawns = new();
         Texture2D Clothing; Texture2D Eyes; Texture2D Headwear; Texture2D Mouths; Texture2D Noses; Texture2D Shells; Texture2D BodyOutline;
         Dictionary<string, Character> ActiveCharacters = new Dictionary<string, Character>();
-
+        //possible states will be: Idle, Fighting, Dungeon
+        String State = "Idle";
 
 
         Int32 timer = 0;
@@ -181,7 +182,7 @@ namespace funniOverlay
             BodyOutline = this.Content.Load<Texture2D>("spriteSheets/body");
 
             _graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = 400;
+            _graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height;
             _graphics.ApplyChanges();
         }
 
@@ -214,8 +215,14 @@ namespace funniOverlay
                     Spawns.Remove(Spawns[i]);
                 }
             }
-            // TODO: Add your update logic here
-
+            if(State == "Idle")
+            {
+                foreach(Character spawn in ActiveCharacters.Values)
+                {
+                    spawn.Idle();
+                }
+            }
+            
             base.Update(gameTime);
         }
 
@@ -227,15 +234,16 @@ namespace funniOverlay
             _spriteBatch.Begin(SpriteSortMode.Deferred);
             foreach(Character spawn in ActiveCharacters.Values)
             {
-                _spriteBatch.Draw(Shells, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), spawn.ShellColor);
-                _spriteBatch.Draw(BodyOutline, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), new Color(255, 255, 255));
                 
-                _spriteBatch.Draw(Eyes, spawn.Body, spawn.Eyes, new Color(255, 255, 255));
-                _spriteBatch.Draw(Mouths, spawn.Body, spawn.Mouth, new Color(255, 255, 255));
-                _spriteBatch.Draw(Noses, spawn.Body, spawn.Nose, new Color(255, 255, 255));
+                _spriteBatch.Draw(Shells, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), spawn.ShellColor, spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(BodyOutline, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                
+                _spriteBatch.Draw(Eyes, spawn.Body, spawn.Eyes, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Mouths, spawn.Body, spawn.Mouth, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Noses, spawn.Body, spawn.Nose, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
 
-                _spriteBatch.Draw(Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255));
-                _spriteBatch.Draw(Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255));
+                _spriteBatch.Draw(Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
             }
 
 
@@ -458,6 +466,7 @@ namespace funniOverlay
         {
             Character NewCharacter = new Character(CosmTextureBounds);
             string Nose; string Body; string Mouth; string Eyes; string Hat; string[] Colors;
+            NewCharacter.Screenwidth = this.Window.ClientBounds.Width;
             if (RawCharacterData.ContainsKey("nose"))
             {
                 Nose = RawCharacterData["nose"];
