@@ -1,12 +1,12 @@
 <div class="join m-2">
 	<label class="input join-item">
 		<span class="label w-27.75">{{title}}</span>
-		<select (change)="onchange($event)" aria-label="Default select example">
-			<option selected>Open this select menu</option>
+		<select [selectedIndex]="selectedIndex()" (change)="onchange($event)" aria-label="Default select example">
+			<option>Open this select menu</option>
 			@for (item of options(); track $index) {
 				<option [value]="item[0]">{{item[1]}}</option>
 			}
 		</select>
 	</label>
-	<button class="btn btn-error join-item">Clear</button>
+	<button (click)="onclear()" class="btn btn-error join-item">Clear</button>
 </div>

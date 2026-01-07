@@ -19,9 +19,19 @@ export class PartInput {
 	id!: string;
 	options = signal<Map<number, string>>(new Map());
 	change = new CustomEvent<PartInput, null>();
+	clear = new CustomEvent<PartInput, null>();
 	value: string|null = null;
+	selectedIndex = signal(0);
 	onchange(event: Event) {
-		this.value = (event.target as HTMLSelectElement).selectedOptions[0].value;
+		const select = (event.target as HTMLSelectElement);
+		this.value = select.selectedOptions[0].value;
+		this.selectedIndex.set(select.selectedIndex);
 		this.change.invoke(this);
+	}
+
+	onclear() {
+		this.selectedIndex.set(0);
+		this.value = null;
+		this.clear.invoke(this);
 	}
 }
