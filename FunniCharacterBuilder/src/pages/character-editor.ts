@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, QueryList, signal, View
 import { RouterOutlet } from "@angular/router";
 import { AnimationManager } from "../utils/AnimationManager";
 import { EventHandler } from "../utils/EventHandler";
-import { PartInput } from "../components/part-input";
+import { PartInput } from "../components/part-input/part-input";
+import { CommandInput } from "../components/command-input/command-input";
 /**
  * Handles loading, configuring, and rendering a customizable character 
  * on an HTML canvas. Supports changing body parts (cosmetics), applying
@@ -12,7 +13,7 @@ import { PartInput } from "../components/part-input";
     selector: "character-editor",
     templateUrl: "./character-editor.html",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [PartInput],
+    imports: [PartInput, CommandInput],
 })
 export class CharacterEditor {
     protected readonly title = signal("Character Editor");
@@ -22,6 +23,9 @@ export class CharacterEditor {
     #ctx!: CanvasRenderingContext2D;
     @ViewChildren(PartInput)
     parts!: QueryList<PartInput>;
+
+    @ViewChild(CommandInput)
+    commandInput!: CommandInput;
 
     /**
      * Stores different character parts, each managed by an AnimationManager.
@@ -65,7 +69,6 @@ export class CharacterEditor {
         this.#canvas.width = 112;
         this.#ctx = this.#canvas.getContext("2d")!;
         this.main();
-
     }
 
     /** 
@@ -82,9 +85,10 @@ export class CharacterEditor {
         // Ensure UI label alignment and start asset loading
         this.#setLabelsWidth();
         this.#loadContent();
-
+        this.commandInput.execute.add(c => console.log(c.value));
         // Initialize color from input element
         this.#color = document.querySelector<HTMLInputElement>("input[type='color']")!.value;
+        this.#generateCommand();
     }
 
     /**
@@ -178,6 +182,7 @@ export class CharacterEditor {
         const color: HTMLInputElement = document.querySelector("input[type='color']")!;
         color.addEventListener("change", () => {
             this.#color = color.value;
+            this.#generateCommand();
         });
 
         this.parts.forEach(part => {
@@ -193,45 +198,13 @@ export class CharacterEditor {
                     part.play(p.value!);
                 else
                     this.#character.set(p.id, null);
+                this.#generateCommand();
             });
             part.clear.add((p) => {
+                this.#generateCommand();
                 this.#character.set(p.id, null);
             })
         });
-
-        // document.querySelectorAll(".input.join-item").forEach(input => {
-        //     const sel = input.querySelector("select");
-
-        //     Handle color picker input
-            
-
-        //     Handle reset buttons for part selectors
-        //     const buttons = input.querySelectorAll("button");
-        //     buttons.forEach(b => {
-        //         b.addEventListener("click", () => {
-        //             sel.selectedIndex = 0;
-        //             this.#character.set(input.id, null);
-        //         });
-        //     });
-
-        //     Populate dropdown options for this category
-        //     const parts = Array.from(this.#parts.get(input.id)!.animations.keys());
-        //     parts.forEach((v) => {
-        //         const option = document.createElement("option");
-        //         option.value = v;
-        //         option.text = this.#cosmetics.get(input.id)![Number(v)];
-        //         sel.append(option);
-        //     });
-
-        //     Update displayed part when selection changes
-        //     sel.addEventListener("change", () => {
-        //         const part = this.#parts.get(input.id);
-        //         if (part !== undefined && part.animations.has(sel.value))
-        //             part.play(sel.value);
-        //         else
-        //             this.#character.set(input.id, null);
-        //     })
-        // });
     }
 
     /**
@@ -287,6 +260,28 @@ export class CharacterEditor {
             if (p !== null)
                 ctx.drawImage(p, 0, 0);
         });
+    }
+
+    #generateCommand() {
+        let command = `!funni changecolor|${this.#convertToRgb(this.#color)}&`;
+        const partNames: string[] = [];
+        this.parts.forEach(part => {
+            const index = part.selectedIndex() - 1;
+            if (index >= 0) {
+                const partName = Array.from(part.options().values())[index];
+                partNames.push(`equipcosmetic|${partName}`);
+            }
+        })
+        this.commandInput.value.set(command + partNames.join("&"));
+        console.log(this.commandInput.value);   
+    }
+
+    #convertToRgb(hex: string) {
+        const parsed = hex.replace('#', '');
+        const r = parseInt(parsed.substring(0, 2), 16); 
+        const g = parseInt(parsed.substring(2, 4), 16); 
+        const b = parseInt(parsed.substring(4, 6), 16);
+        return `${r},${g},${b}`
     }
 
 }

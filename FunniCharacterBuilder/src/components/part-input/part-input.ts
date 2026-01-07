@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Input, signal, ViewChild } from "@angular/core";
-import {EventHandler as CustomEvent} from "../utils/EventHandler";
+import { EventHandler } from "../../utils/EventHandler";
 
 /**
  */
@@ -14,8 +14,8 @@ export class PartInput {
 	@Input()
 	id!: string;
 	options = signal<Map<number, string>>(new Map());
-	change = new CustomEvent<PartInput>();
-	clear = new CustomEvent<PartInput>();
+	change = new EventHandler<PartInput>();
+	clear = new EventHandler<PartInput>();
 	value: string|null = null;
 	selectedIndex = signal(0);
 	onchange(event: Event) {
