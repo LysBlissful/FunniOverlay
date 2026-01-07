@@ -1,0 +1,17 @@
+<h1 class="display-4 text-center">Welcome to your character builder</h1>
+<div class="flex items-center">
+	<div class="flex flex-col m-3">
+		<part-input id="eyeShape" title="Eye shape"/>
+		<part-input id="headwear" title="Headwear"/>
+		<part-input id="mouthShape" title="Mouth shape"/>
+		<part-input id="noseShape" title="Nose shape"/>
+		<div class="join m-2">
+			<label class="input join-item" id="shellColor">
+				<span class="label w-[172px]">Shell color</span>
+				<input type="color" value="white">
+			</label>
+			<button class="btn btn-error join-item">Clear</button>
+		</div>
+	</div>
+	<canvas #canvas></canvas>
+</div>

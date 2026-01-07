@@ -1,0 +1,47 @@
+{
+	"clothing": [
+		"bronzeBreastplate",
+		"kimono",
+		"monkRobes",
+		"theMightyBowl"
+	],
+
+	"eyeShape": [
+		"angyEyes",
+		"coolGlasses",
+		"sadgeEyes"
+	],
+
+	"headwear": [
+		"demonHorns",
+		"karateHeadband",
+		"off-colorFlamingo",
+		"vikingHelmet",
+		"unwashedSonicHair"
+	],
+
+	"mouthShape": [
+		"canadian",
+		"dColon",
+		"lookAtThisGuySmile",
+		"oMouth",
+		"shitEatingGrin",
+		"threeSmile",
+		"toothySmirk"
+	],
+
+	"noseShape": [
+		"cthulu",
+		"downturnedPointyNose",
+		"gobbinNose",
+		"pointyNose",
+		"ratNose",
+		"roundNose",
+		"skullNose",
+		"stubbyBeak",
+		"thiccNose",
+		"upturnedNose",
+		"wideNose",
+		"widePointyNose"
+	]
+}
