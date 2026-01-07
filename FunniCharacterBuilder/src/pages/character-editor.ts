@@ -193,6 +193,9 @@ export class CharacterEditor {
                     part.play(p.value!);
                 else
                     this.#character.set(p.id, null);
+            });
+            part.clear.add((p) => {
+                this.#character.set(p.id, null);
             })
         });
 
