@@ -1,30 +1,25 @@
-import Event from "./event.js";
+import { EventHandler } from "./EventHandler.js";
 
-export default class Timer {
-    /** @type {number} */
-    #interval;
-    /** @type {number} */
-    #intervalId = 0;
-    /** @type {boolean} */
-    #ticking;
-
-    /** @type {number} */
-    end;
+export class Timer {
+    #interval!: number;
+    #intervalId: number = 0;
+    #ticking: boolean;
+    end: number|null;
 
     /** 
      * Time passed since the timer started in ms
      * 
      * @type {number} 
      */
-    #timePassed;
+    #timePassed: number;
 
     /**
      * Event handler invoked on every timer tick.
      * Listeners can subscribe to this event to perform actions at each tick.
      *
-     * @type {Event<Timer, null>}
+     * @type {EventHandler<Timer>}
      */
-    tick;
+    tick: EventHandler<Timer>;
 
     /**
      * The interval (in milliseconds) at which the timer ticks.
@@ -48,13 +43,13 @@ export default class Timer {
      *
      * @param {number} interval - The interval in milliseconds at which the timer ticks.
      */
-    constructor(interval = 0, end = null) {
+    constructor(interval: number = 0, end = null) {
         this.interval = interval;
         this.end = end;
         this.#ticking = false;
         this.#intervalId = 0
         this.#timePassed = 0;
-        this.tick = new Event();
+        this.tick = new EventHandler();
     }
 
     /**

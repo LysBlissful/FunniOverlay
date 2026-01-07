@@ -1,9 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Input, signal, ViewChild } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
-import AnimationManager from "../utils/animationManager";
-import CustomEvent from "../utils/event";
-
-type PartOption = {value: number, text: string}
+import {EventHandler as CustomEvent} from "../utils/EventHandler";
 
 /**
  */
@@ -18,8 +14,8 @@ export class PartInput {
 	@Input()
 	id!: string;
 	options = signal<Map<number, string>>(new Map());
-	change = new CustomEvent<PartInput, null>();
-	clear = new CustomEvent<PartInput, null>();
+	change = new CustomEvent<PartInput>();
+	clear = new CustomEvent<PartInput>();
 	value: string|null = null;
 	selectedIndex = signal(0);
 	onchange(event: Event) {

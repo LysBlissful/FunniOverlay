@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, QueryList, signal, ViewChild, ViewChildren } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
-import AnimationManager from "../utils/animationManager";
-import Event from "../utils/event";
+import { AnimationManager } from "../utils/AnimationManager";
+import { EventHandler } from "../utils/EventHandler";
 import { PartInput } from "../components/part-input";
 /**
  * Handles loading, configuring, and rendering a customizable character 
@@ -54,7 +54,7 @@ export class CharacterEditor {
     #character: Map<string, ImageBitmap | null> = new Map();
 
     /** Event triggered when all assets are loaded */
-    #load = new Event();
+    #load = new EventHandler();
 
     /** Current tint color applied to the character */
     #color = "white";

@@ -1,57 +1,25 @@
-import Event from "./event.js";
-import SpriteAnimation from "./spriteAnimation.js";
-import Timer from "./timer.js";
+import { EventHandler } from "./EventHandler.js";
+import { SpriteAnimation } from "./SpriteAnimation.js";
+import { Timer } from "./Timer.js";
 
-export default class AnimationManager {
-	/** @type {SpriteAnimation | null} Currently playing animation */
-	#animation;
+export class AnimationManager {
+	#animation: SpriteAnimation;
+	#flip: boolean = false;
+	#loaded: boolean = false;
+	spriteSheet: HTMLImageElement;
+	animations: Map<string, SpriteAnimation>;
+	frames: ImageBitmap[];
+	flippedFrames: ImageBitmap[];
+	sprite: ImageBitmap | null;
+	timer: Timer;
+	hFrames: number;
+	vFrames: number;
+	load: EventHandler<AnimationManager> = new EventHandler();
+	start: EventHandler<AnimationManager> = new EventHandler();
+	end: EventHandler<AnimationManager> = new EventHandler();
+	frameChange: EventHandler<AnimationManager> = new EventHandler();
 
-	/** @type {boolean} Whether the animation is flipped horizontally */
-	#flip = false;
-
-	/** @type {boolean} Indicates if all frames are loaded */
-	#loaded = false;
-
-	/** @type {HTMLImageElement} Raw sprite sheet */
-	spriteSheet;
-
-	/** @type {Map<string, SpriteAnimation>} Stores animations by name */
-	animations;
-
-	/** @type {ImageBitmap[]} Unflipped frames */
-	frames;
-
-	/** @type {ImageBitmap[]} Flipped (horizontally mirrored) frames */
-	flippedFrames;
-
-	/** @type {ImageBitmap | null} Current frame to render */
-	sprite;
-
-	/** @type {Timer} Internal timer for frame switching */
-	timer;
-
-	/** @type {number} Number of horizontal frames in the sprite sheet */
-	hFrames;
-
-	/** @type {number} Number of vertical frames in the sprite sheet */
-	vFrames;
-
-	/** @type {Event<AnimationManager>} Triggered when all frames are loaded */
-	load = new Event();
-
-	/** @type {Event<AnimationManager>} Triggered when the animation starts */
-	start = new Event();
-
-	/** @type {Event<AnimationManager>} Triggered when the animation ends */
-	end = new Event();
-
-	/** @type {Event<AnimationManager>} Triggered on each frame update */
-	frameChange = new Event();
-
-	/** Whether the animation frames are loaded */
-	get loaded() {
-		return this.#loaded;
-	}
+	get loaded() { return this.#loaded; }
 
 	/** Whether an animation is playing */
 	get playing() {
@@ -96,14 +64,14 @@ export default class AnimationManager {
 	 * @param {number} hFrames Number of frames horizontally
 	 * @param {number} vFrames Number of frames vertically
 	 */
-	constructor(src, hFrames, vFrames) {
+	constructor(src: string, hFrames: number, vFrames: number) {
 		this.hFrames = hFrames;
 		this.vFrames = vFrames;
 		this.animations = new Map();
 		this.frames = [];
 		this.flippedFrames = [];
 		this.sprite = null;
-		this.#animation = null;
+		this.#animation = null!;
 
 		this.timer = new Timer();
 		this.timer.tick.add(this.#onTimerTick);
@@ -160,7 +128,7 @@ export default class AnimationManager {
 	 * @param {number} end End frame index
 	 * @param {boolean} loop Whether it should loop
 	 */
-	createAnimation(name, fps, start, end, loop = false) {
+	createAnimation(name: string, fps: number, start: number, end: number, loop: boolean = false) {
 		const frames = [];
 		for (let i = start; i <= end; i++) {
 			frames.push(i);
@@ -173,7 +141,7 @@ export default class AnimationManager {
 	 * @param {string} name Animation name
 	 * @throws {Error} If animation doesn't exist
 	 */
-	play(name) {
+	play(name: string) {
 		if (!this.loaded) {
 			this.load.clear();
 			this.load.add(() => this.play(name));
@@ -209,7 +177,7 @@ export default class AnimationManager {
 	 * @param {string} name Animation name
 	 * @returns {number}
 	 */
-	getFrameCount(name) {
+	getFrameCount(name: string): number {
 		const animation = this.animations.get(name);
 		if (!animation)
 			throw new Error(`There's no animation with the name: "${name}"`);
@@ -227,7 +195,7 @@ export default class AnimationManager {
 		const canvas = document.createElement("canvas");
 		canvas.width = frameWidth;
 		canvas.height = frameHeight;
-		const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d")!;
 
 		for (let j = 0; j < this.vFrames; j++) {
 			for (let i = 0; i < this.hFrames; i++) {
@@ -255,12 +223,12 @@ export default class AnimationManager {
 	 * @param {ImageBitmap} frame Original frame
 	 * @returns {Promise<ImageBitmap>} Flipped version
 	 */
-	async #flipBitmap(frame) {
+	async #flipBitmap(frame: ImageBitmap): Promise<ImageBitmap> {
 		const canvas = document.createElement("canvas");
 		canvas.width = frame.width;
 		canvas.height = frame.height;
 
-		const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d")!;
 		ctx.save();
 		ctx.scale(-1, 1);
 		ctx.drawImage(frame, -frame.width, 0);
@@ -274,12 +242,12 @@ export default class AnimationManager {
 	 * @param {string} name 
 	 * @returns {HTMLImageElement} A new image element containing the combined frames.
 	 */
-	displayFrames(name) {
+	displayFrames(name: string): HTMLImageElement|null {
 		if(!this.loaded){
 			this.load.add(() => this.displayFrames(name))
-			return;
+			return null;
 		}
-		const animation = this.animations.get(name);
+		const animation = this.animations.get(name)!;
 		const frameIndices = animation.frames;
 		const firstFrame = this.frames[frameIndices[0]];
 		const frameWidth = firstFrame.width;
@@ -290,7 +258,7 @@ export default class AnimationManager {
 		const canvas = document.createElement("canvas");
 		canvas.width = frameWidth * totalFrames;
 		canvas.height = frameHeight;
-		const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d")!;
 
 		// Draw each frame side-by-side
 		for (let i = 0; i < totalFrames; i++) {
