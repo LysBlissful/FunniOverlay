@@ -20,7 +20,7 @@ namespace funniOverlay
 
 
         public Color ShellColor { get; set; }
-        public int DirectionMod { get; set; }
+        public Vector2 DirectionMod { get; set; }
         public Rectangle Body { get; set; }
         public Rectangle HeadGear { get; set; }
         public Rectangle Clothing { get; set; }
@@ -41,7 +41,7 @@ namespace funniOverlay
         public Character(int size)
         {
             Size = size;
-            Position = new Point(new Random().Next(0, 1920), new Random().Next(0, 500));
+            Position = new Point(new Random().Next(0, 1920), new Random().Next(0, 1080));
             HP = 0;
             ActionSpeed = 0;
             AI = "lolsorandom";
@@ -57,7 +57,7 @@ namespace funniOverlay
             ShellColor = new Color(255, 255, 255);
             IdleClock = 0;
             Screenwidth = 1920;
-            DirectionMod = 1;
+            DirectionMod = new Vector2(1,1);
         }
         public Character(Rectangle body, Rectangle headGear, Rectangle clothing, Rectangle nose, Rectangle eyes, Rectangle mouth, Rectangle shell, Point position, int hP, int actionSpeed, int size, int screenwidth)
         {
@@ -76,7 +76,7 @@ namespace funniOverlay
             RandomMode = 0;
             IdleClock = 0;
             Screenwidth = screenwidth;
-            DirectionMod = 1;
+            DirectionMod = new Vector2(1, 1);
             //usable code, hitboxoffsettop is the step to take to make egg shaped 7 part hitbox from the top, bottom is its bottom counterpart. use hitboxoffsettop x for distance from top
             //and hitboxoffsettop y for distance from bottom
             /*Point HitboxOffsetTop = new Point(Convert.ToInt32(.06 * Size), Convert.ToInt32(.07 * Size));
@@ -88,6 +88,7 @@ namespace funniOverlay
         public void Idle()
         {
             Random rnd = new Random();
+            Body = new Rectangle(Position.X, Position.Y, Body.Width, Body.Height);
             if (IdleClock < 300)
             {
                 IdleClock++;
@@ -108,14 +109,11 @@ namespace funniOverlay
                 if(IdleClock == 1200)
                 {
                     TextureAngle = 0;
-                    if (Position.X > (Screenwidth / 2 + rnd.Next(-500, 500)))
-                    {
-                        DirectionMod = -1;
-                    }
-                    else DirectionMod = 1;
+                    DirectionMod = new Vector2(rnd.Next(0, 2), rnd.Next(-2,3));
+                    if (DirectionMod.X == 0) DirectionMod = new Vector2(-1, DirectionMod.Y);
                 }
                 IdleClock++;
-                Position = new Point(Position.X + (2 * DirectionMod), Position.Y);
+                Position = new Point(Position.X + (int)(2 * DirectionMod.X), Position.Y + (int)(5 * Math.Sin(IdleClock) + DirectionMod.Y));
                 Body = new Rectangle(Position.X, Position.Y, Body.Width, Body.Height);
                 if (IdleClock >= 1300 + rnd.Next(0, 700)) IdleClock = 0;
             }

@@ -148,10 +148,11 @@ namespace funniOverlay
         HttpClient http = new();
         ConcurrentBag<string> actionsToPerform = new();
         List<Entity> Spawns = new();
-        Texture2D Clothing; Texture2D Eyes; Texture2D Headwear; Texture2D Mouths; Texture2D Noses; Texture2D Shells; Texture2D BodyOutline;
+        Texture2D Clothing; Texture2D Eyes; Texture2D Headwear; Texture2D Mouths; Texture2D Noses; Texture2D Shells; Texture2D BodyOutline; Texture2D Placeholder;
         Dictionary<string, Character> ActiveCharacters = new Dictionary<string, Character>();
         //possible states will be: Idle, Fighting, Dungeon
         String State = "Idle";
+        List<Rectangle> PlayAreas;
 
 
         Int32 timer = 0;
@@ -180,7 +181,8 @@ namespace funniOverlay
             Shells = this.Content.Load<Texture2D>("spriteSheets/0whiteSkin");
             Eyes = this.Content.Load<Texture2D>("spriteSheets/eyeShapes");
             BodyOutline = this.Content.Load<Texture2D>("spriteSheets/body");
-
+            Placeholder = this.Content.Load<Texture2D>("spriteSheets/placeholder square");
+            CheckAndSetSettings();
             _graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
             _graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height;
             _graphics.ApplyChanges();
@@ -189,7 +191,13 @@ namespace funniOverlay
         protected override void Update(GameTime gameTime)
         {
             Point coords = new();
+            Random rnd = new Random();
+            double ratio = 0;
+            int randomholder = 0;
+            int RelativePlayAreaPosition = 0;
+            bool isInsidePlayArea = false;
 
+            Rectangle CorrectedBody;
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             if (timer == 60)
@@ -219,7 +227,51 @@ namespace funniOverlay
             {
                 foreach(Character spawn in ActiveCharacters.Values)
                 {
+                    isInsidePlayArea = false;
                     spawn.Idle();
+                    CorrectedBody = new Rectangle(spawn.Body.X - (CosmTextureBounds / 2), spawn.Body.Y - CosmTextureBounds, spawn.Body.Width, spawn.Body.Height);
+                    foreach (Rectangle playarea in PlayAreas)
+                    {
+                        
+                        if (playarea.Intersects(CorrectedBody))
+                        {
+                            isInsidePlayArea = true;
+                            if (!playarea.Contains(CorrectedBody))
+                            {
+                                //higher than allowed play area
+                                if(CorrectedBody.Top < playarea.Top)
+                                {
+                                    spawn.Position = new Point(spawn.Position.X, spawn.Position.Y + (playarea.Height) - CosmTextureBounds);
+                                }
+                                //lower than allowed play area
+                                if(CorrectedBody.Bottom > playarea.Bottom)
+                                {
+                                    spawn.Position = new Point(spawn.Position.X, spawn.Position.Y - (playarea.Height) + CosmTextureBounds);
+                                }
+                                //left of play area
+                                if(CorrectedBody.Left < playarea.Left)
+                                {
+                                    randomholder = rnd.Next(0, PlayAreas.Count());
+                                    RelativePlayAreaPosition = spawn.Position.Y - playarea.Top; 
+                                    ratio = (PlayAreas[randomholder].Height > playarea.Height ? PlayAreas[randomholder].Height / playarea.Height : playarea.Height / PlayAreas[randomholder].Height);
+                                    spawn.Position = new Point(PlayAreas[randomholder].Right - CosmTextureBounds, (PlayAreas[randomholder].Height > playarea.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
+                                }
+                                //right of play area
+                                if(CorrectedBody.Right > playarea.Right)
+                                {
+                                    randomholder = rnd.Next(0, PlayAreas.Count());
+                                    RelativePlayAreaPosition = spawn.Position.Y - playarea.Top;
+                                    ratio = (PlayAreas[randomholder].Height > playarea.Height ? PlayAreas[randomholder].Height / playarea.Height : playarea.Height / PlayAreas[randomholder].Height);
+                                    spawn.Position = new Point(PlayAreas[randomholder].Left, (PlayAreas[randomholder].Height > playarea.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
+                                }
+                            }
+                        }
+                    }
+                    if (isInsidePlayArea == false)
+                    {
+                        randomholder = rnd.Next(0, PlayAreas.Count());
+                        spawn.Position = new Point(rnd.Next(PlayAreas[randomholder].Left, PlayAreas[randomholder].Right - CosmTextureBounds), rnd.Next(PlayAreas[randomholder].Top, PlayAreas[randomholder].Bottom - CosmTextureBounds));
+                    }
                 }
             }
             
@@ -232,19 +284,25 @@ namespace funniOverlay
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin(SpriteSortMode.Deferred);
+
+            /*foreach(Rectangle playarea in PlayAreas)
+            {
+                _spriteBatch.Draw(Placeholder, playarea, Color.White);
+            }*/
+
             foreach(Character spawn in ActiveCharacters.Values)
             {
                 
-                _spriteBatch.Draw(Shells, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), spawn.ShellColor, spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-                _spriteBatch.Draw(BodyOutline, spawn.Body, new Rectangle(0, 0, CosmTextureBounds, CosmTextureBounds), new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Shells, spawn.Body, spawn.Shell, spawn.ShellColor, spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(BodyOutline, spawn.Body, spawn.Shell, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
                 
-                _spriteBatch.Draw(Eyes, spawn.Body, spawn.Eyes, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-                _spriteBatch.Draw(Mouths, spawn.Body, spawn.Mouth, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-                _spriteBatch.Draw(Noses, spawn.Body, spawn.Nose, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Eyes, spawn.Body, spawn.Eyes, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Mouths, spawn.Body, spawn.Mouth, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Noses, spawn.Body, spawn.Nose, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
 
-                _spriteBatch.Draw(Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-                _spriteBatch.Draw(Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-            }
+                _spriteBatch.Draw(Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+            }   
 
 
             _spriteBatch.End();
@@ -347,7 +405,7 @@ namespace funniOverlay
             Dictionary<string, string> CharacterData;
             value = value.ToLower();
             //THIS IS NOT A SINGLE SPACE, IT IS A COMBINING GRAPHEME JOINER AND ITS FROM FUCKING MIXITUP AND THE CODE
-            //BREAK EVERY OTHER TIME IF ITS NOT REPLACED WITH EMPTY
+            //BREAKS EVERY OTHER TIME IF ITS NOT REPLACED WITH EMPTY
             value = value.Replace(" ͏","");
             if(command == "changecolor")
             {
@@ -444,6 +502,10 @@ namespace funniOverlay
                 {
                     await ResponseChatMessage(false, "please enter a valid equipment name");
                 }
+            }
+            if(command == "updatesettings")
+            {
+
             }
             if(command == "showcharacter") {
                 CharacterData = FetchCharacterData(UID);
@@ -726,6 +788,14 @@ namespace funniOverlay
                     break;
             }
             return Action;
+        }
+
+        private void CheckAndSetSettings()
+        {
+            //todo: program write to new settings text document, below are defaults
+            PlayAreas = new List<Rectangle>();
+            PlayAreas.Add(new Rectangle(0, 850, 1525, 230));
+            PlayAreas.Add(new Rectangle(1525, 0, 395, 600));
         }
     }
 }
