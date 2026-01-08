@@ -18,6 +18,7 @@ export class PartInput {
 	clear = new EventHandler<PartInput>();
 	value: string|null = null;
 	selectedIndex = signal(0);
+	
 	onchange(event: Event) {
 		const select = (event.target as HTMLSelectElement);
 		this.value = select.selectedOptions[0].value;

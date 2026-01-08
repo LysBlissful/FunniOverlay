@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { EventHandler } from "../../utils/EventHandler";
 
 /**
+ * Input for containing commands
  */
 @Component({
     selector: "command-input",
@@ -11,13 +12,17 @@ import { EventHandler } from "../../utils/EventHandler";
 	imports: [FormsModule],
 })
 export class CommandInput {
+	/** Text inside the input */
 	value = signal("");
 
+	/** Reference for the input containing the command */
 	@ViewChild("input")
 	inputRef!: ElementRef<HTMLInputElement>;
 
-	execute = new EventHandler<CommandInput>();
+	/** Event for when the execute button is pressed */
+	readonly execute = new EventHandler<CommandInput>();
 
+	/** Copies the current text in the input into user's clipboard */
 	copy() {
 		const input = this.inputRef.nativeElement;
 		input.select();
@@ -25,8 +30,8 @@ export class CommandInput {
 		navigator.clipboard.writeText(input.value);
 	}
 
+	/** Invokes the {@link execute} {@link EventHandler} */
 	onexecute() {
 		this.execute.invoke(this);
 	}
-
 }

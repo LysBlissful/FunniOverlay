@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, ElementRef, QueryList, signal, ViewChild, ViewChildren } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
 import { AnimationManager } from "../utils/AnimationManager";
 import { EventHandler } from "../utils/EventHandler";
 import { PartInput } from "../components/part-input/part-input";
@@ -16,22 +15,15 @@ import { CommandInput } from "../components/command-input/command-input";
     imports: [PartInput, CommandInput],
 })
 export class CharacterEditor {
-    protected readonly title = signal("Character Editor");
-    @ViewChild('canvas', { static: false }) 
-    canvasRef!: ElementRef<HTMLCanvasElement>;
-    #canvas!: HTMLCanvasElement;
-    #ctx!: CanvasRenderingContext2D;
-    @ViewChildren(PartInput)
-    parts!: QueryList<PartInput>;
 
-    @ViewChild(CommandInput)
-    commandInput!: CommandInput;
+    protected readonly title = signal("Character Editor");
+    #ctx!: CanvasRenderingContext2D;
 
     /**
      * Stores different character parts, each managed by an AnimationManager.
      * Each AnimationManager handles sprite sheet animations for that part.
      */
-    #parts = new Map([
+    #partsSprites = new Map([
        ["noseShape", new AnimationManager("/img/SpriteSheets/noseShapes.png", 4, 3)],
        ["headwear", new AnimationManager("/img/SpriteSheets/headwear.png", 4, 2)],
        ["eyeShape", new AnimationManager("/img/SpriteSheets/eyeShapes.png", 4, 1)],
@@ -39,35 +31,43 @@ export class CharacterEditor {
        ["mouthShape", new AnimationManager("/img/SpriteSheets/mouthShapes.png", 4, 2)],
     ]);
 
-    /** @type {ImageBitmap}  Body image (base character shape) */
+    /** Body image (base character shape) */
     #body: ImageBitmap = null!;
 
-    /** @type {ImageBitmap}  Shell image (outline for tinting) */
+    /** Shell image (outline for tinting) */
     #shell: ImageBitmap = null!;
 
-    /** 
-     * @type {Map<string, string[]>} 
-     * Cosmetic data loaded from JSON file (e.g., part names, options)
-     */
+    /** Cosmetic data loaded from JSON file (e.g., part names, options) */
     #cosmetics: Map<string, string[]> = new Map();
 
-    /**
-     * @type {Map<string, ImageBitmap|null>} 
-     * Currently selected images for each cosmetic category.
-     */
+    /** Currently selected images for each cosmetic category.*/
     #character: Map<string, ImageBitmap | null> = new Map();
 
     /** Event triggered when all assets are loaded */
-    #load = new EventHandler();
+    #load = new EventHandler<CharacterEditor>();
 
     /** Current tint color applied to the character */
     #color = "white";
 
+    /** Reference to the canvas in which the egg is drawn */
+    @ViewChild('canvas', { static: false }) 
+    canvasRef!: ElementRef<HTMLCanvasElement>;
+
+    /** All part inputs of the page */
+    @ViewChildren(PartInput)
+    parts!: QueryList<PartInput>;
+
+    /** The command input of the page */
+    @ViewChild(CommandInput)
+    commandInput!: CommandInput;
+    
+
+    
     ngAfterViewInit() {
-        this.#canvas = this.canvasRef.nativeElement;
-        this.#canvas.height = 112;
-        this.#canvas.width = 112;
-        this.#ctx = this.#canvas.getContext("2d")!;
+        const canvas = this.canvasRef.nativeElement;
+        canvas.height = 112;
+        canvas.width = 112;
+        this.#ctx = canvas.getContext("2d")!;
         this.main();
     }
 
@@ -79,11 +79,9 @@ export class CharacterEditor {
         // Add setup and draw callbacks to the load event
         this.#load.add(
             this.#setupOptions.bind(this), 
-            () => setInterval(this.#draw.bind(this), 1000 / 60) // 60 FPS draw loop
+            () => setInterval(this.#draw.bind(this), 1000 / 24)
         );
 
-        // Ensure UI label alignment and start asset loading
-        this.#setLabelsWidth();
         this.#loadContent();
         this.commandInput.execute.add(c => console.log(c.value));
         // Initialize color from input element
@@ -120,6 +118,7 @@ export class CharacterEditor {
     
     /**
      * Loads the body base image and converts it to an ImageBitmap.
+     * 
      * @async
      */
     async #loadBody() {
@@ -152,27 +151,6 @@ export class CharacterEditor {
             this.#cosmetics.set(key, cosmetics[key]);
         }
     }
-
-    /**
-     * Ensures all UI labels in the editor have the same width.
-     * Makes the layout visually consistent.
-     */
-    #setLabelsWidth() {
-        /** @type {NodeListOf<HTMLLabelElement>} */
-        const labels: NodeListOf<HTMLLabelElement> = document.querySelectorAll("#app .input-group-text");
-        let maxWidth = 0;
-
-        // Find widest label
-        labels.forEach(label => {
-            const width = label.offsetWidth;
-            if (width > maxWidth) maxWidth = width;
-        });
-
-        // Apply uniform width
-        labels.forEach(label => {
-            label.style.width = `${maxWidth}px`;
-        });
-    }
     
     /**
      * Initializes all UI elements (selectors, buttons, color pickers)
@@ -186,14 +164,14 @@ export class CharacterEditor {
         });
 
         this.parts.forEach(part => {
-            const parts = Array.from(this.#parts.get(part.id)!.animations.keys());
+            const parts = Array.from(this.#partsSprites.get(part.id)!.animations.keys());
             const options: Map<number, string> = new Map();
             parts.forEach(p => {
                 options.set(Number(p), this.#cosmetics.get(part.id)![Number(p)]);
             });
             part.options.set(options);
             part.change.add((p) => {
-                const part = this.#parts.get(p.id);
+                const part = this.#partsSprites.get(p.id);
                 if (part !== undefined && part.animations.has(p.value!))
                     part.play(p.value!);
                 else
@@ -210,11 +188,12 @@ export class CharacterEditor {
     /**
      * Creates animation instances for each cosmetic option
      * within a specific category (e.g., eye shapes, clothing).
+     * 
      * @param {string} category - The category name.
      */
     #createParts(category: string) {
         for (let i = 0; i < this.#cosmetics.get(category)!.length; i++) {
-            this.#parts.get(category)!.createAnimation(i.toString(), 1, i, i);
+            this.#partsSprites.get(category)!.createAnimation(i.toString(), 1, i, i);
             console.log(category);
         }
     }
@@ -225,7 +204,7 @@ export class CharacterEditor {
      * the current frame’s sprite image.
      */
     #setPartsEvents() {
-        this.#parts.forEach((a, k) => {
+        this.#partsSprites.forEach((a, k) => {
             a.frameChange.add(() => {
                 this.#character.set(k, a.sprite);
             });
@@ -238,10 +217,10 @@ export class CharacterEditor {
      */
     #draw() {
         const ctx = this.#ctx!;
-        const canvas = this.#canvas;
+        const canvas = this.canvasRef.nativeElement;
 
         // Clear previous frame
-        ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Draw shell for tinting
         ctx.drawImage(this.#shell, 0, 0);
@@ -261,27 +240,33 @@ export class CharacterEditor {
                 ctx.drawImage(p, 0, 0);
         });
     }
-
+    
+    /** Generates a command from all character parts */
     #generateCommand() {
-        let command = `!funni changecolor|${this.#convertToRgb(this.#color)}&`;
-        const partNames: string[] = [];
+        let command = "!funni ";
+        const commands: string[] = [`changecolor|${this.#convertToRgb(this.#color)}`];
         this.parts.forEach(part => {
             const index = part.selectedIndex() - 1;
             if (index >= 0) {
                 const partName = Array.from(part.options().values())[index];
-                partNames.push(`equipcosmetic|${partName}`);
+                commands.push(`equipcosmetic|${partName}`);
             }
         })
-        this.commandInput.value.set(command + partNames.join("&"));
+        this.commandInput.value.set(command + commands.join("&"));
         console.log(this.commandInput.value);   
     }
-
-    #convertToRgb(hex: string) {
+    
+    /**
+     * Converts hex into rgb
+     *
+     * @param {string} hex 
+     * @returns {string} 
+     */
+    #convertToRgb(hex: string): string {
         const parsed = hex.replace('#', '');
         const r = parseInt(parsed.substring(0, 2), 16); 
         const g = parseInt(parsed.substring(2, 4), 16); 
         const b = parseInt(parsed.substring(4, 6), 16);
         return `${r},${g},${b}`
     }
-
 }
