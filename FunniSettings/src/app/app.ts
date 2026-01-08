@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { BoundaryEditor } from "../boundary-editor/boundary-editor";
 declare global {
   interface Window {
   electronAPI: {
@@ -11,7 +12,7 @@ declare global {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, BoundaryEditor],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

@@ -1,0 +1,3 @@
+interface IClonable {
+	clone(): IClonable;
+}

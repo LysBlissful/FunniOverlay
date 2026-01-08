@@ -9,8 +9,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "electron": "ng build && electron .",
-    "package-win": "ng build && electron-packager . --platform=win32 --arch=x64 --out=dist",
-    "package-linux": "ng build && electron-packager . --platform=linux --arch=x64 --out=dist"
+    "package-win": "ng build && electron-packager . --platform=win32 --arch=x64 --out=dist --overwrite",
+    "package-linux": "ng build && electron-packager . --platform=linux --arch=x64 --out=dist --overwrite"
   },
   "prettier": {
     "printWidth": 100,
