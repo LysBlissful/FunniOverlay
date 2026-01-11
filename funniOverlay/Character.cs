@@ -15,7 +15,7 @@ namespace funniOverlay
         private Rectangle[] Hitboxes { get; set; }
         private int AITimer { get; set; }
         private int IdleClock { get; set; }
-        
+
         private int OriginalY = 0;
 
 
@@ -25,9 +25,15 @@ namespace funniOverlay
         public Rectangle HeadGear { get; set; }
         public Rectangle Clothing { get; set; }
         public Rectangle Nose { get; set; }
-        public Rectangle Eyes {  get; set; }
+        public Rectangle Eyes { get; set; }
         public Rectangle Mouth { get; set; }
-        public Rectangle Shell {  get; set; }
+        public Rectangle Shell { get; set; }
+
+        public bool PremiumBody { get; set; }
+        public bool PremiumHeadwear { get; set; }
+        public bool AnimatedBody { get; set; }
+        public bool AnimatedHeadwear { get; set; }
+        public int Framechange { get; set; }
 
 
         public Point Position { get; set; }
@@ -58,6 +64,11 @@ namespace funniOverlay
             IdleClock = 0;
             Screenwidth = 1920;
             DirectionMod = new Vector2(1,1);
+
+            PremiumBody = false;
+            PremiumHeadwear = false;
+            AnimatedBody = false;
+            AnimatedHeadwear = false;
         }
         public Character(Rectangle body, Rectangle headGear, Rectangle clothing, Rectangle nose, Rectangle eyes, Rectangle mouth, Rectangle shell, Point position, int hP, int actionSpeed, int size, int screenwidth)
         {
@@ -77,6 +88,11 @@ namespace funniOverlay
             IdleClock = 0;
             Screenwidth = screenwidth;
             DirectionMod = new Vector2(1, 1);
+
+            PremiumBody = false;
+            PremiumHeadwear = false;
+            AnimatedBody = false;
+            AnimatedHeadwear = false;
             //usable code, hitboxoffsettop is the step to take to make egg shaped 7 part hitbox from the top, bottom is its bottom counterpart. use hitboxoffsettop x for distance from top
             //and hitboxoffsettop y for distance from bottom
             /*Point HitboxOffsetTop = new Point(Convert.ToInt32(.06 * Size), Convert.ToInt32(.07 * Size));
@@ -117,6 +133,7 @@ namespace funniOverlay
                 Body = new Rectangle(Position.X, Position.Y, Body.Width, Body.Height);
                 if (IdleClock >= 1300 + rnd.Next(0, 700)) IdleClock = 0;
             }
+            Framechange++;
         }
         private void WeebleWobble()
         {
@@ -128,6 +145,9 @@ namespace funniOverlay
             }
            
         }
+
+        public void ResetFrameCount() { Framechange = 0; }
+
         //used in combat
         public void LifeTick()
         {

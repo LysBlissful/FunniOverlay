@@ -17,6 +17,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Evolution;
+using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
+using Microsoft.VisualBasic;
 
 namespace funniOverlay
 {
@@ -41,7 +44,8 @@ namespace funniOverlay
             "equipitem",
             "say",
             "equipcosmetic",
-            "showcharacter"
+            "showcharacter",
+            "addcosmetic"
         };
         readonly Dictionary<string, Point> CosmNose = new Dictionary<string, Point>
         {
@@ -88,6 +92,23 @@ namespace funniOverlay
             { "lookatthisguysmile", new Point(CosmTextureBounds * 2, 0) },
             { "dcolon", new Point(CosmTextureBounds, 0) },
             { "canadian", new Point(0, 0) }
+        };
+
+        readonly Dictionary<string, Point> PremCosmBody = new Dictionary<string, Point>
+        {
+            { "testcosmetic", new Point(0, 0) },
+            {"lizard-0", new Point(CosmTextureBounds, 0) },
+            {"lizard-1", new Point(CosmTextureBounds * 2, 0)},
+            {"weddingdress", new Point(CosmTextureBounds * 3, 0)}
+        };
+        readonly Dictionary<string, Point> PremCosmHat = new Dictionary<string, Point>
+        {
+            {"weddingveil", new Point(0,0) }
+        };
+
+        readonly Dictionary<string, int> AnimationFrameTimes = new Dictionary<string, int>
+        {
+            { "lizard", 20}
         };
 
         readonly string[] EquipPet =
@@ -148,7 +169,7 @@ namespace funniOverlay
         HttpClient http = new();
         ConcurrentBag<string> actionsToPerform = new();
         List<Entity> Spawns = new();
-        Texture2D Clothing; Texture2D Eyes; Texture2D Headwear; Texture2D Mouths; Texture2D Noses; Texture2D Shells; Texture2D BodyOutline; Texture2D Placeholder;
+        Texture2D Clothing; Texture2D Eyes; Texture2D Headwear; Texture2D Mouths; Texture2D Noses; Texture2D Shells; Texture2D BodyOutline; Texture2D Placeholder; Texture2D PremClothing; Texture2D PremHeadwear;
         Dictionary<string, Character> ActiveCharacters = new Dictionary<string, Character>();
         //possible states will be: Idle, Fighting, Dungeon
         String State = "Idle";
@@ -175,6 +196,8 @@ namespace funniOverlay
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Clothing = this.Content.Load<Texture2D>("spriteSheets/clothing");
+            PremClothing = this.Content.Load<Texture2D>("spriteSheets/PremiumClothing");
+            PremHeadwear = this.Content.Load<Texture2D>("spriteSheets/PremiumHeadwear");
             Headwear = this.Content.Load<Texture2D>("spriteSheets/headwear");
             Mouths = this.Content.Load<Texture2D>("spriteSheets/mouthShapes");
             Noses = this.Content.Load<Texture2D>("spriteSheets/noseShapes");
@@ -184,7 +207,7 @@ namespace funniOverlay
             Placeholder = this.Content.Load<Texture2D>("spriteSheets/placeholder square");
             CheckAndSetSettings();
             _graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height;
+            _graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 50;
             _graphics.ApplyChanges();
         }
 
@@ -197,7 +220,7 @@ namespace funniOverlay
             int RelativePlayAreaPosition = 0;
             bool isInsidePlayArea = false;
 
-            Rectangle CorrectedBody;
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             if (timer == 60)
@@ -229,42 +252,17 @@ namespace funniOverlay
                 {
                     isInsidePlayArea = false;
                     spawn.Idle();
-                    CorrectedBody = new Rectangle(spawn.Body.X - (CosmTextureBounds / 2), spawn.Body.Y - CosmTextureBounds, spawn.Body.Width, spawn.Body.Height);
+
+                    if(spawn.AnimatedBody == true)
+                    {
+                        RunAnimationsForEggs(spawn);
+                    }
+
                     foreach (Rectangle playarea in PlayAreas)
                     {
-                        
-                        if (playarea.Intersects(CorrectedBody))
+                        if(BoundaryCheck(spawn, playarea))
                         {
                             isInsidePlayArea = true;
-                            if (!playarea.Contains(CorrectedBody))
-                            {
-                                //higher than allowed play area
-                                if(CorrectedBody.Top < playarea.Top)
-                                {
-                                    spawn.Position = new Point(spawn.Position.X, spawn.Position.Y + (playarea.Height) - CosmTextureBounds);
-                                }
-                                //lower than allowed play area
-                                if(CorrectedBody.Bottom > playarea.Bottom)
-                                {
-                                    spawn.Position = new Point(spawn.Position.X, spawn.Position.Y - (playarea.Height) + CosmTextureBounds);
-                                }
-                                //left of play area
-                                if(CorrectedBody.Left < playarea.Left)
-                                {
-                                    randomholder = rnd.Next(0, PlayAreas.Count());
-                                    RelativePlayAreaPosition = spawn.Position.Y - playarea.Top; 
-                                    ratio = (PlayAreas[randomholder].Height > playarea.Height ? PlayAreas[randomholder].Height / playarea.Height : playarea.Height / PlayAreas[randomholder].Height);
-                                    spawn.Position = new Point(PlayAreas[randomholder].Right - CosmTextureBounds, (PlayAreas[randomholder].Height > playarea.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
-                                }
-                                //right of play area
-                                if(CorrectedBody.Right > playarea.Right)
-                                {
-                                    randomholder = rnd.Next(0, PlayAreas.Count());
-                                    RelativePlayAreaPosition = spawn.Position.Y - playarea.Top;
-                                    ratio = (PlayAreas[randomholder].Height > playarea.Height ? PlayAreas[randomholder].Height / playarea.Height : playarea.Height / PlayAreas[randomholder].Height);
-                                    spawn.Position = new Point(PlayAreas[randomholder].Left, (PlayAreas[randomholder].Height > playarea.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
-                                }
-                            }
                         }
                     }
                     if (isInsidePlayArea == false)
@@ -300,8 +298,8 @@ namespace funniOverlay
                 _spriteBatch.Draw(Mouths, spawn.Body, spawn.Mouth, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
                 _spriteBatch.Draw(Noses, spawn.Body, spawn.Nose, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
 
-                _spriteBatch.Draw(Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
-                _spriteBatch.Draw(Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(spawn.PremiumHeadwear ? PremHeadwear : Headwear, spawn.Body, spawn.HeadGear, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
+                _spriteBatch.Draw(spawn.PremiumBody ? PremClothing : Clothing, spawn.Body, spawn.Clothing, new Color(255, 255, 255), spawn.TextureAngle, new Vector2(CosmTextureBounds / 2, CosmTextureBounds), spawn.DirectionMod.X == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0);
             }   
 
 
@@ -309,6 +307,80 @@ namespace funniOverlay
             base.Draw(gameTime);
             
         }
+
+        private bool BoundaryCheck(Character Egg, Rectangle Boundary)
+        {
+            bool isInside = false;
+            Rectangle CorrectedBody = new Rectangle(Egg.Body.X - (CosmTextureBounds / 2), Egg.Body.Y - CosmTextureBounds, Egg.Body.Width, Egg.Body.Height);
+            int randomholder = 0;
+            Random rnd = new Random();
+            int RelativePlayAreaPosition = 0;
+            double ratio = 0;
+            if (Boundary.Intersects(CorrectedBody))
+            {
+                isInside = true;
+                if (!Boundary.Contains(CorrectedBody))
+                {
+                    //higher than allowed play area
+                    if (CorrectedBody.Top < Boundary.Top)
+                    {
+                        Egg.Position = new Point(Egg.Position.X, Egg.Position.Y + (Boundary.Height) - CosmTextureBounds);
+                    }
+                    //lower than allowed play area
+                    if (CorrectedBody.Bottom > Boundary.Bottom)
+                    {
+                        Egg.Position = new Point(Egg.Position.X, Egg.Position.Y - (Boundary.Height) + CosmTextureBounds);
+                    }
+                    //left of play area
+                    if (CorrectedBody.Left < Boundary.Left)
+                    {
+                        randomholder = rnd.Next(0, PlayAreas.Count());
+                        RelativePlayAreaPosition = Egg.Position.Y - Boundary.Top;
+                        ratio = (PlayAreas[randomholder].Height > Boundary.Height ? PlayAreas[randomholder].Height / Boundary.Height : Boundary.Height / PlayAreas[randomholder].Height);
+                        Egg.Position = new Point(PlayAreas[randomholder].Right - CosmTextureBounds, (PlayAreas[randomholder].Height > Boundary.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
+                    }
+                    //right of play area
+                    if (CorrectedBody.Right > Boundary.Right)
+                    {
+                        randomholder = rnd.Next(0, PlayAreas.Count());
+                        RelativePlayAreaPosition = Egg.Position.Y - Boundary.Top;
+                        ratio = (PlayAreas[randomholder].Height > Boundary.Height ? PlayAreas[randomholder].Height / Boundary.Height : Boundary.Height / PlayAreas[randomholder].Height);
+                        Egg.Position = new Point(PlayAreas[randomholder].Left + CosmTextureBounds, (PlayAreas[randomholder].Height > Boundary.Height ? (int)(ratio * RelativePlayAreaPosition + PlayAreas[randomholder].Top) : (int)(RelativePlayAreaPosition / ratio + PlayAreas[randomholder].Top)));
+                    }
+                }
+            }
+
+            return isInside;
+        }
+        private void RunAnimationsForEggs(Character Egg)
+        {
+            string TextureName = "";
+            int Iteration = 0;
+            foreach (KeyValuePair<string, Point> TextureBox in PremCosmBody)
+            {
+                if (TextureBox.Value == new Point(Egg.Clothing.X, Egg.Clothing.Y))
+                {
+                    TextureName = TextureBox.Key.Split("-")[0];
+                    Iteration = Convert.ToInt32(TextureBox.Key.Split("-")[1]);
+                    Iteration++;
+
+                    if (Egg.Framechange >= AnimationFrameTimes[TextureName])
+                    {
+                        Egg.ResetFrameCount();
+                        if (PremCosmBody.ContainsKey(TextureName + "-" + Iteration))
+                        {
+                            Egg.Clothing = new Rectangle(PremCosmBody[TextureName + "-" + Iteration], Egg.Clothing.Size);
+                        }
+                        else
+                        {
+                            Egg.Clothing = new Rectangle(PremCosmBody[TextureName + "-0"], Egg.Clothing.Size);
+                        }
+                    }
+                }
+            }
+        }
+
+
 
 
         private void AutoShoutOut(ConcurrentBag<string> FirstMessageTodayList)
@@ -319,6 +391,11 @@ namespace funniOverlay
             //FirstMessageTodayList.Add("e109e9b5-cc90-4c0f-9077-5fe1000ac3de&");
             if (!FirstMessageTodayList.IsEmpty)
             {
+                foreach (string userInfoShowCharacter in FirstMessageTodayList)
+                {
+                    ShowCharacter(userInfoShowCharacter.Split('&')[0]);
+                }
+                
                 try
                 {
                     FileContents = File.ReadAllText(AutoShoutOutListLocation);
@@ -328,12 +405,12 @@ namespace funniOverlay
 
                         foreach (string userInfo in FirstMessageTodayList)
                         {
+                            
                             UserInformationSplit.Clear();
                             UserInformationSplit.Add(userInfo.Split('&')[0]);
-                            UserInformationSplit.Add(userInfo.Split('&')[1].Replace("%2f", "/"));
+                            UserInformationSplit.Add(userInfo.Split('&')[1].ToLower().Replace("%2f", "/"));
                             UserInformationSplit.Add(userInfo.Split('&')[2].Replace("+", " "));
                             UserInformationSplit.Add(userInfo.Split('&')[3]);
-
                             if (USERIDandMessageFromFile.ContainsKey(UserInformationSplit[0]))
                             {
                                 if (USERIDandMessageFromFile[UserInformationSplit[0]] == "")
@@ -346,6 +423,7 @@ namespace funniOverlay
                                 {
                                     AutoShoutOutChatMessage(UserInformationSplit[3], UserInformationSplit[2], UserInformationSplit[1], USERIDandMessageFromFile[UserInformationSplit[0]]);
                                 }
+                                USERIDandMessageFromFile.Remove(UserInformationSplit[0]);
                             }
                         }
                     }
@@ -368,9 +446,9 @@ namespace funniOverlay
 
         //returns a dictionary of a single message's commands in key value pairs where key is the
         //command and value represents the command change value
-        private Dictionary<string, string> ParseCommandInputs(string rawCommands)
+        private List <string> ParseCommandInputs(string rawCommands)
         {
-            Dictionary<string,string> commandPairs = new Dictionary<string,string>();
+            List<string> commandPairs = new List<string>();
             string[] splitCommands = rawCommands.Split('&');
             string commandstringholder;
             foreach (string commandstrings in  splitCommands)
@@ -379,11 +457,11 @@ namespace funniOverlay
                 commandstringholder = commandstrings.Replace(" ͏", "");
                 if (commandstringholder.Contains('|'))
                 {
-                    commandPairs[commandstringholder.Split('|')[0].ToLower()] = commandstringholder.Split('|')[1].ToLower();
+                    commandPairs[commandPairs.Count] = commandstringholder.Split('|')[0].ToLower() + "|" + commandstringholder.Split('|')[1].ToLower();
                 }
                 else if (commandstringholder.Contains("showcharacter"))
                 {
-                    commandPairs[commandstringholder] = "";
+                    commandPairs[commandPairs.Count] = "";
                 }
                 else
                 {
@@ -455,6 +533,24 @@ namespace funniOverlay
                     await UpdateEquippables("nose", value, UID);
                     isValidCosmetic = true;
                 }
+                else if (PremCosmBody.ContainsKey(value) || PremCosmBody.ContainsKey(value + "-0"))
+                {
+                    if(UserHasCosmetic(value, UID))
+                    {
+                        await UpdateEquippables("body", value, UID);
+                        isValidCosmetic = true;
+                    }
+                }
+                else if(PremCosmHat.ContainsKey(value)||PremCosmHat.ContainsKey(value + "-0"))
+                {
+                    if (UserHasCosmetic(value, UID))
+                    {
+                        await UpdateEquippables("hat", value, UID);
+                        isValidCosmetic = true;
+                    }
+                }
+
+
                 if (!isValidCosmetic)
                 {
                     await ResponseChatMessage(false, "please enter a valid cosmetic name");
@@ -508,15 +604,13 @@ namespace funniOverlay
 
             }
             if(command == "showcharacter") {
-                CharacterData = FetchCharacterData(UID);
-                if (ActiveCharacters.ContainsKey(UID))
-                {
-                    ActiveCharacters[UID] = BuildCharacter(CharacterData);
-                }
-                else
-                {
-                    ActiveCharacters.Add(UID, BuildCharacter(CharacterData));
-                }
+                ShowCharacter(UID);
+                
+            }
+            if(command == "addcosmetic")
+            {
+                await UpdateInventory("cosmetic", value, UID);
+                await ResponseChatMessage(true, "Successfully bought: " + value);
             }
             else if (ActiveCharacters.ContainsKey(UID))
             {
@@ -524,6 +618,44 @@ namespace funniOverlay
                 ActiveCharacters[UID] = BuildCharacter(CharacterData);
             }
         }
+
+        private void ShowCharacter(string UID)
+        {
+            Dictionary<string, string> CData = FetchCharacterData(UID);
+            if (ActiveCharacters.ContainsKey(UID))
+            {
+                ActiveCharacters[UID] = BuildCharacter(CData);
+            }
+            else
+            {
+                ActiveCharacters.Add(UID, BuildCharacter(CData));
+            }
+        }
+
+        private async Task UpdateInventory(string ItemType, string NewItem, string UID)
+        {
+            string FileContents = "";
+            string NewSaveData = "";
+            string Addition = ItemType + "-" + NewItem + "|";
+            try
+            {
+                FileContents = File.ReadAllText(AllSaveLocation + UID + "Inventory.txt");
+            }
+            catch (FileNotFoundException)
+            {
+
+            }
+            if (FileContents == "")
+            {
+                NewSaveData = Addition;
+            }
+            else
+            {
+                NewSaveData = FileContents + Addition;
+            }
+            File.WriteAllText(AllSaveLocation + UID + "Inventory.txt", NewSaveData);
+        }
+
         private Character BuildCharacter(Dictionary<string,string> RawCharacterData)
         {
             Character NewCharacter = new Character(CosmTextureBounds);
@@ -544,6 +676,17 @@ namespace funniOverlay
                 {
                     NewCharacter.HeadGear = new Rectangle(CosmHat[Hat].X, CosmHat[Hat].Y, CosmTextureBounds, CosmTextureBounds);
                 }
+                else if (PremCosmHat.ContainsKey(Hat))
+                {
+                    NewCharacter.HeadGear = new Rectangle(PremCosmHat[Hat].X, PremCosmHat[Hat].Y, CosmTextureBounds, CosmTextureBounds);
+                    NewCharacter.PremiumHeadwear = true;
+                }
+                else if (PremCosmBody.ContainsKey(Hat + "-0"))
+                {
+                    NewCharacter.HeadGear = new Rectangle(PremCosmHat[Hat + "-0"].X, PremCosmBody[Hat + "-0"].Y, CosmTextureBounds, CosmTextureBounds);
+                    NewCharacter.PremiumHeadwear = true;
+                    NewCharacter.AnimatedBody = true;
+                }
             }
             if (RawCharacterData.ContainsKey("eyes"))
             {
@@ -559,6 +702,18 @@ namespace funniOverlay
                 if (CosmBody.ContainsKey(Body))
                 {
                     NewCharacter.Clothing = new Rectangle(CosmBody[Body].X, CosmBody[Body].Y, CosmTextureBounds, CosmTextureBounds);
+                    NewCharacter.PremiumBody = false;
+                }
+                else if (PremCosmBody.ContainsKey(Body))
+                {
+                    NewCharacter.Clothing = new Rectangle(PremCosmBody[Body].X, PremCosmBody[Body].Y, CosmTextureBounds, CosmTextureBounds);
+                    NewCharacter.PremiumBody = true;
+                }
+                else if(PremCosmBody.ContainsKey(Body + "-0"))
+                {
+                    NewCharacter.Clothing = new Rectangle(PremCosmBody[Body+"-0"].X, PremCosmBody[Body+"-0"].Y, CosmTextureBounds, CosmTextureBounds);
+                    NewCharacter.PremiumBody = true;
+                    NewCharacter.AnimatedBody = true;
                 }
             }
             if (RawCharacterData.ContainsKey("mouth"))
@@ -632,7 +787,24 @@ namespace funniOverlay
             File.WriteAllText(AllSaveLocation + UID + ".txt", NewSaveData);
         }
 
+        private bool UserHasCosmetic(string CosmName, string UID)
+        {
+            bool Has = false;
+            string FileContents = "";
+            try
+            {
+                FileContents = File.ReadAllText(AllSaveLocation + UID + "Inventory.txt");
+            }
+            catch (FileNotFoundException)
+            {
 
+            }
+            if(FileContents != "")
+            {
+                Has = FileContents.Contains(CosmName);
+            }
+            return Has;
+        }
         private async Task UpdateColor(Color newcolor, string UID)
         {
             string FileContents = "";
@@ -681,12 +853,13 @@ namespace funniOverlay
             string JSON3 = await APIFetch.Content.ReadAsStringAsync();
             string JSON4 = await AutoShoutOutCall.Content.ReadAsStringAsync();
             List<dynamic> inventories = new List<dynamic>();
-            Dictionary<string, string> parsedCommands = new Dictionary<string, string>();
+            List<Command> parsedCommands = new List<Command>();
 
             var JSONResponse = JsonConvert.DeserializeObject <Dictionary<string,dynamic>>(JSON);
             var JSONBag = JsonConvert.DeserializeObject<ConcurrentBag<string>>(JSON3);
             var AutoShoutList = JsonConvert.DeserializeObject<ConcurrentBag<string>>(JSON4);
             dynamic USERID;
+            string UID;
 
             if(AutoShoutList == null)
             {
@@ -702,13 +875,26 @@ namespace funniOverlay
             {
                 foreach (var APIitem in JSONBag)
                 {
-                    parsedCommands = ParseCommandInputs(APIitem);
+                    UID = APIitem.Split("USERID|")[1].Split("&")[0];
+                    foreach(string pairs in APIitem.Split("&"))
+                    {
+                        parsedCommands.Add(new Command());
+                        if(!parsedCommands[parsedCommands.Count - 1].ParseCommand(pairs, UID))
+                        {
+                            ResponseChatMessage(false, "please seperate the command with a '|' from the value. error occurred on '" + pairs + "'and did not execute this command");
+                        }
+                    }
+                    
                     foreach (string command in APICommands)
                     {
-                        if (parsedCommands.ContainsKey(command.ToLower()))
+                        foreach (Command activeCommand in parsedCommands)
                         {
-                            CompleteCommand(command, parsedCommands[command], parsedCommands["userid"]);
+                            if (activeCommand.CommandName.ToLower().Contains(command.ToLower()))
+                            {
+                                CompleteCommand(activeCommand.CommandName, activeCommand.CommandText, UID);
+                            }
                         }
+                        
                     }
                 }
             }

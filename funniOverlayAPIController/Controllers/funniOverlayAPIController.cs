@@ -34,11 +34,11 @@ namespace funniOverlayAPIController.Controllers
             return Ok(copyOfRequests);
             
         }
-        [HttpGet("autoShoutOut/{user}")]
+        [HttpGet("autoShoutOut/{message}")]
         [Consumes("application/json")]
-        public async Task<IActionResult> AutoShoutOut(string user)
+        public async Task<IActionResult> AutoShoutOut(string message)
         {
-            autoShout.Add(user);
+            autoShout.Add(message);
             return Ok();
         }
         [HttpGet("getASOList")]
