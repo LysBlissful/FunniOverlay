@@ -1,47 +1,209 @@
 {
-	"clothing": [
-		"bronzeBreastplate",
-		"kimono",
-		"monkRobes",
-		"theMightyBowl"
-	],
-
-	"eyeShape": [
-		"angyEyes",
-		"coolGlasses",
-		"sadgeEyes"
-	],
-
-	"headwear": [
-		"demonHorns",
-		"karateHeadband",
-		"off-colorFlamingo",
-		"vikingHelmet",
-		"unwashedSonicHair"
-	],
-
-	"mouthShape": [
-		"canadian",
-		"dColon",
-		"lookAtThisGuySmile",
-		"oMouth",
-		"shitEatingGrin",
-		"threeSmile",
-		"toothySmirk"
-	],
-
-	"noseShape": [
-		"cthulu",
-		"downturnedPointyNose",
-		"gobbinNose",
-		"pointyNose",
-		"ratNose",
-		"roundNose",
-		"skullNose",
-		"stubbyBeak",
-		"thiccNose",
-		"upturnedNose",
-		"wideNose",
-		"widePointyNose"
-	]
+	"clothing": {
+		"free": [
+			{
+				"id": "bronzeBreastplate",
+				"name": "Bronze breast plate",
+				"frames": [0]
+			},
+			{
+				"id": "kimono",
+				"name": "Kimono",
+				"frames": [1]
+			},
+			{
+				"id": "monkRobes",
+				"name": "Monk robes",
+				"frames": [2]
+			},
+			{
+				"id": "theMightyBowl",
+				"name": "The Mighty Bowl",
+				"frames": [3]
+			},
+			{
+				"id": "theMightyBowl",
+				"name": "The Mighty Bowl",
+				"frames": [3]
+			}
+		],
+		"premium": [
+			{
+				"id": "testcosmetic",
+				"name": "Test",
+				"frames": [0]
+			},
+			{
+				"id": "lizard",
+				"name": "Lizard",
+				"frames": [1, 2]
+			},
+			{
+				"id": "weddingDress",
+				"name": "Wedding Dress",
+				"frames": [3]
+			}
+		]
+	},
+	"eyeShape": {
+		"free": [
+			{
+				"id": "angyEyes",
+				"name": "Angy eyes",
+				"frames": [0]
+			},
+			{
+				"id": "coolGlasses",
+				"name": "Cool glasses",
+				"frames": [1]
+			},
+			{
+				"id": "sadgeEyes",
+				"name": "Sadge eyes",
+				"frames": [2]
+			}
+		],
+		"premium": []
+	},
+	"headwear": {
+		"free": [
+			{
+				"id": "demonHorns",
+				"name": "Demon horns",
+				"frames": [0]
+			},
+			{
+				"id": "karateHeadband",
+				"name": "Karate headband",
+				"frames": [1]
+			},
+			{
+				"id": "off-colorFlamingo",
+				"name": "Off-color flamingo",
+				"frames": [2]
+			},
+			{
+				"id": "vikingHelmet",
+				"name": "Viking helmet",
+				"frames": [3]
+			},
+			{
+				"id": "unwashedSonicHair",
+				"name": "Unwashed Sonic hair",
+				"frames": [4]
+			}
+		],
+		"premium": [
+			{
+				"id": "weddingVeil",
+				"name": "Wedding Veil",
+				"frames": [0]
+			}
+		]
+	},
+	"mouthShape": {
+		"free": [
+			{
+				"id": "canadian",
+				"name": "Canadian",
+				"frames": [0]
+			},
+			{
+				"id": "dColon",
+				"name": "D:",
+				"frames": [1]
+			},
+			{
+				"id": "lookAtThisGuySmile",
+				"name": "Look at this guy smile",
+				"frames": [2]
+			},
+			{
+				"id": "oMouth",
+				"name": "O mouth",
+				"frames": [3]
+			},
+			{
+				"id": "shitEatingGrin",
+				"name": "Shit-eating grin",
+				"frames": [4]
+			},
+			{
+				"id": "threeSmile",
+				"name": ":3 smile",
+				"frames": [5]
+			},
+			{
+				"id": "toothySmirk",
+				"name": "Toothy smirk",
+				"frames": [6]
+			}
+		],
+		"premium": []
+	},
+	"noseShape": {
+		"free": [
+			{
+				"id": "cthulu",
+				"name": "Cthulu",
+				"frames": [0]
+			},
+			{
+				"id": "downturnedPointyNose",
+				"name": "Downturned pointy nose",
+				"frames": [1]
+			},
+			{
+				"id": "gobbinNose",
+				"name": "Gobbin nose",
+				"frames": [2]
+			},
+			{
+				"id": "pointyNose",
+				"name": "Pointy nose",
+				"frames": [3]
+			},
+			{
+				"id": "ratNose",
+				"name": "Rat nose",
+				"frames": [4]
+			},
+			{
+				"id": "roundNose",
+				"name": "Round nose",
+				"frames": [5]
+			},
+			{
+				"id": "skullNose",
+				"name": "Skull nose",
+				"frames": [6]
+			},
+			{
+				"id": "stubbyBeak",
+				"name": "Stubby beak",
+				"frames": [7]
+			},
+			{
+				"id": "thiccNose",
+				"name": "Thicc nose",
+				"frames": [8]
+			},
+			{
+				"id": "upturnedNose",
+				"name": "Upturned nose",
+				"frames": [9]
+			},
+			{
+				"id": "wideNose",
+				"name": "Wide nose",
+				"frames": [10]
+			},
+			{
+				"id": "widePointyNose",
+				"name": "Wide pointy nose",
+				"frames": [11]
+			}
+		],
+		"premium": []
+	}
 }

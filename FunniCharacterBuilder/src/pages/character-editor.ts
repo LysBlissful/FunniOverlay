@@ -4,6 +4,16 @@ import { AnimationManager } from "../utils/AnimationManager";
 import { EventHandler } from "../utils/EventHandler";
 import { PartInput } from "../components/part-input/part-input";
 import { CommandInput } from "../components/command-input/command-input";
+
+type PartStorageItem = {
+    free: AnimationManager|null,
+    premium: AnimationManager|null
+};
+
+type CosmeticStorageItem = { 
+    free: {id: string, name: string, frames: number[]}[], 
+    premium: {id: string, name: string, frames: number[]}[] 
+};
 /**
  * Handles loading, configuring, and rendering a customizable character 
  * on an HTML canvas. Supports changing body parts (cosmetics), applying
@@ -31,12 +41,13 @@ export class CharacterEditor {
      * Stores different character parts, each managed by an AnimationManager.
      * Each AnimationManager handles sprite sheet animations for that part.
      */
-    #parts = new Map([
-       ["noseShape", new AnimationManager("/img/SpriteSheets/noseShapes.png", 4, 3)],
-       ["headwear", new AnimationManager("/img/SpriteSheets/headwear.png", 4, 2)],
-       ["eyeShape", new AnimationManager("/img/SpriteSheets/eyeShapes.png", 4, 1)],
-       ["clothing", new AnimationManager("/img/SpriteSheets/clothing.png", 4, 1)],
-       ["mouthShape", new AnimationManager("/img/SpriteSheets/mouthShapes.png", 4, 2)],
+    #partsStorage = new Map<string, PartStorageItem>([
+       ["noseShape", null!],
+       ["headwear", null!],
+       ["headwear", null!],
+       ["eyeShape", null!],
+       ["clothing", null!],
+       ["mouthShape", null!],
     ]);
 
     /** @type {ImageBitmap}  Body image (base character shape) */
@@ -46,10 +57,9 @@ export class CharacterEditor {
     #shell: ImageBitmap = null!;
 
     /** 
-     * @type {Map<string, string[]>} 
      * Cosmetic data loaded from JSON file (e.g., part names, options)
      */
-    #cosmetics: Map<string, string[]> = new Map();
+    #cosmetics: Map<string, CosmeticStorageItem> = new Map();
 
     /**
      * @type {Map<string, ImageBitmap|null>} 
@@ -100,6 +110,7 @@ export class CharacterEditor {
      */
     async #loadContent(): Promise<void> {
         await Promise.all([
+            this.#loadPartsStorage(),
             this.#loadBody(),
             this.#loadCosmetics(),
             this.#loadShell()
@@ -116,6 +127,22 @@ export class CharacterEditor {
 
         // Notify all load listeners
         this.#load.invoke(this);
+    }
+
+    async #loadPartsStorage() {
+        const response = await fetch("/data/spritesheets.json");
+        const parts = await response.json();
+        for (const part of parts) {
+            const options: PartStorageItem = {free: null, premium: null};
+            if (part.free != null)
+                options.free = new AnimationManager(`/img/SpriteSheets/${part.free.src}`, part.free.hFrames, part.free.vFrames)
+            if (part.premium != null)
+                options.premium = new AnimationManager(`/img/SpriteSheets/${part.premium.src}`, part.premium.hFrames, part.premium.vFrames)
+            this.#partsStorage.set(part.id, {
+                free: options.free,
+                premium: options.premium
+            })
+        }
     }
     
     /**
@@ -151,6 +178,7 @@ export class CharacterEditor {
         for (const key in cosmetics) {
             this.#cosmetics.set(key, cosmetics[key]);
         }
+        console.log(this.#cosmetics);
     }
 
     /**
@@ -186,26 +214,41 @@ export class CharacterEditor {
         });
 
         this.parts.forEach(part => {
-            const parts = Array.from(this.#parts.get(part.id)!.animations.keys());
-            const options: Map<number, string> = new Map();
-            parts.forEach(p => {
-                options.set(Number(p), this.#cosmetics.get(part.id)![Number(p)]);
-            });
-            part.options.set(options);
-            part.change.add((p) => {
-                const part = this.#parts.get(p.id);
-                if (part !== undefined && part.animations.has(p.value!))
-                    part.play(p.value!);
-                else
-                    this.#character.set(p.id, null);
-                this.#generateCommand();
-            });
-            part.clear.add((p) => {
-                this.#generateCommand();
-                this.#character.set(p.id, null);
-            })
+            const partStorageItem = this.#partsStorage.get(part.id)!;
+            const cosmeticStorageItem = this.#cosmetics.get(part.id)!;
+            if (partStorageItem.free != null) {
+                this.#setupParts(part, partStorageItem.free, cosmeticStorageItem.free)
+            }
+            if (partStorageItem.premium != null) {
+                this.#setupParts(part, partStorageItem.premium, cosmeticStorageItem.premium)
+            }
         });
     }
+
+    #setupParts(input: PartInput, parts: AnimationManager, cosmetics: {id: string, name: string, frames: number[]}[]) {
+        const options: Map<string, string> = new Map();
+        const partsIds = Array.from(parts.animations.keys());
+        const mappedCosmetics = new Map<string, {id: string, name: string, frames: number[]}>();
+        cosmetics.forEach(c => mappedCosmetics.set(c.id, c));
+        partsIds.forEach(p => {
+            options.set(p, mappedCosmetics.get(p)!.name);
+        });
+        input.options.set(options);
+        input.change.add((p) => {
+            if (parts.animations.has(p.value!))
+                parts.play(p.value!);
+            else
+                this.#character.set(p.id, null);
+            this.#generateCommand();
+        });
+        input.clear.add((p) => {
+            this.#generateCommand();
+            this.#partsStorage.get(p.id)!.free?.stop();
+            this.#partsStorage.get(p.id)!.premium?.stop();
+            this.#character.set(p.id, null);
+        })
+    }
+
 
     /**
      * Creates animation instances for each cosmetic option
@@ -213,9 +256,19 @@ export class CharacterEditor {
      * @param {string} category - The category name.
      */
     #createParts(category: string) {
-        for (let i = 0; i < this.#cosmetics.get(category)!.length; i++) {
-            this.#parts.get(category)!.createAnimation(i.toString(), 1, i, i);
-            console.log(category);
+        const cosmeticsStorage = this.#cosmetics.get(category)!;
+        const partsStorageItem = this.#partsStorage.get(category)!;
+        for (let i = 0; i < cosmeticsStorage.free.length; i++) {
+            const frames = cosmeticsStorage.free[i].frames; 
+            const start = frames[0];
+            const end = frames.length > 1 ? frames[1] : start;
+            partsStorageItem.free!.createAnimation(cosmeticsStorage.free[i].id, 4, start, end, true);
+        }
+        for (let i = 0; i < cosmeticsStorage.premium.length; i++) {
+            const frames = cosmeticsStorage.premium[i].frames; 
+            const start = frames[0];
+            const end = frames.length > 1 ? frames[1] : start;
+            partsStorageItem.premium!.createAnimation(cosmeticsStorage.premium[i].id, 4, start, end, true);
         }
     }
 
@@ -225,8 +278,11 @@ export class CharacterEditor {
      * the current frame’s sprite image.
      */
     #setPartsEvents() {
-        this.#parts.forEach((a, k) => {
-            a.frameChange.add(() => {
+        this.#partsStorage.forEach((pi, k) => {
+            pi.free?.frameChange.add((a) => {
+                this.#character.set(k, a.sprite);
+            });
+            pi.premium?.frameChange.add((a) => {
                 this.#character.set(k, a.sprite);
             });
         });
@@ -268,7 +324,7 @@ export class CharacterEditor {
         this.parts.forEach(part => {
             const index = part.selectedIndex() - 1;
             if (index >= 0) {
-                const partName = Array.from(part.options().values())[index];
+                const partName = Array.from(part.options().keys())[index];
                 partNames.push(`equipcosmetic|${partName}`);
             }
         })

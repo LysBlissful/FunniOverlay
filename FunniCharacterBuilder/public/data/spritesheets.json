@@ -1,0 +1,55 @@
+[
+	{
+		"id": "clothing",
+		"free": {
+			"src": "clothing.png",
+			"hFrames": 4,
+			"vFrames": 1
+		},
+		"premium": {
+			"src": "premiumClothing.png",
+			"hFrames": 4,
+			"vFrames": 1
+		}
+	},
+	{
+		"id": "eyeShape",
+		"free": {
+			"src": "eyeShapes.png",
+			"hFrames": 4,
+			"vFrames": 1
+		},
+		"premium": null 
+	},
+	{
+		"id": "headwear",
+		"free": {
+			"src": "headwear.png",
+			"hFrames": 4,
+			"vFrames": 2
+		},
+		"premium": {
+			"src": "premiumHeadwear.png",
+			"hFrames": 1,
+			"vFrames": 1
+		}
+	},
+	{
+		"id": "mouthShape",
+		"free": {
+			"src": "mouthShapes.png",
+			"hFrames": 4,
+			"vFrames": 2
+		},
+		"premium": null 
+	},
+	{
+		"id": "noseShape",
+		"free": {
+			"src": "noseShapes.png",
+			"hFrames": 4,
+			"vFrames": 3
+		},
+		"premium": null 
+	}
+]

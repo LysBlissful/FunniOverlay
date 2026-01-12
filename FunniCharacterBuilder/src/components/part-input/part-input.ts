@@ -13,7 +13,7 @@ export class PartInput {
 	title!: string;
 	@Input()
 	id!: string;
-	options = signal<Map<number, string>>(new Map());
+	options = signal<Map<string, string>>(new Map());
 	change = new EventHandler<PartInput>();
 	clear = new EventHandler<PartInput>();
 	value: string|null = null;
