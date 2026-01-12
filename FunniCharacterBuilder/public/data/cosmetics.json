@@ -85,12 +85,12 @@
 			{
 				"id": "vikingHelmet",
 				"name": "Viking helmet",
-				"frames": [3]
+				"frames": [4]
 			},
 			{
 				"id": "unwashedSonicHair",
 				"name": "Unwashed Sonic hair",
-				"frames": [4]
+				"frames": [3]
 			}
 		],
 		"premium": [
