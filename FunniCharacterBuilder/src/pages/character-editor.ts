@@ -217,16 +217,34 @@ export class CharacterEditor {
             const partStorageItem = this.#partsStorage.get(part.id)!;
             const cosmeticStorageItem = this.#cosmetics.get(part.id)!;
             if (partStorageItem.free != null) {
-                this.#setupParts(part, partStorageItem.free, cosmeticStorageItem.free)
+                this.#setupParts(part, partStorageItem.free, cosmeticStorageItem.free);
+                part.change.add((p) => {
+                    if (partStorageItem.free!.animations.has(p.value!)) {
+                        partStorageItem.premium!.stop();
+                        partStorageItem.free!.play(p.value!);
+                    }
+                    else
+                        this.#character.set(p.id, null);
+                    this.#generateCommand();
+                });
             }
             if (partStorageItem.premium != null) {
-                this.#setupParts(part, partStorageItem.premium, cosmeticStorageItem.premium)
+                this.#setupParts(part, partStorageItem.premium, cosmeticStorageItem.premium);
+                part.change.add((p) => {
+                    if (partStorageItem.premium!.animations.has(p.value!)) {
+                        partStorageItem.free!.stop();
+                        partStorageItem.premium!.play(p.value!);
+                    }
+                    else
+                        this.#character.set(p.id, null);
+                    this.#generateCommand();
+                });
             }
         });
     }
 
     #setupParts(input: PartInput, parts: AnimationManager, cosmetics: {id: string, name: string, frames: number[]}[]) {
-        const options: Map<string, string> = new Map();
+        const options = new Map(input.options());
         const partsIds = Array.from(parts.animations.keys());
         const mappedCosmetics = new Map<string, {id: string, name: string, frames: number[]}>();
         cosmetics.forEach(c => mappedCosmetics.set(c.id, c));
