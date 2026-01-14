@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BoundaryEditor } from "../boundary-editor/boundary-editor";
+import { BoundaryEditor } from "../components/boundary-editor/boundary-editor.component";
 declare global {
   interface Window {
   electronAPI: {
