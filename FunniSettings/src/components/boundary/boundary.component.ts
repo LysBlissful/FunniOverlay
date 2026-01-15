@@ -1,36 +1,50 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, Input, signal } from '@angular/core';
 import { Rectangle } from '../../utils/Rectangle';
 import { Vector } from '../../utils/Vector';
+import { BoundaryMenu } from "../boundary-menu/boundary-menu.component";
+import { BoundaryEditor } from "../boundary-editor/boundary-editor.component";
 
 @Component({
     selector: "boundary-component",
     templateUrl: "./boundary.component.html",
-    styleUrl: "./boundary.component.css",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [BoundaryMenu],
 })
 export class Boundary {
-    @ViewChild("div")
-    divRef!: ElementRef<HTMLDivElement>;
-
     #rectangle: Rectangle = new Rectangle(0, 0);
+    #menu?: BoundaryMenu;
 
+    @ViewChild("root")
+    divRef!: ElementRef<HTMLDivElement>;
+    #showMenu = false;
+    @ViewChild(BoundaryMenu)
+    set menuRef(value: BoundaryMenu | undefined) {
+        if (value) {
+            this.#menu = value;
+            if (this.lastClickPosition != null)
+                this.#menu.position.set(this.lastClickPosition);
+        }
+    }
+    private test = signal(0);
     @Input({ required: true })
     get width() { return this.#rectangle.width; }
-    set width(value) {
-        this.#rectangle.width = value;
-    }
+    set width(value) { this.#rectangle.width = value; }
 
     @Input({ required: true })
     get height() { return this.#rectangle.height; }
-    set height(value) {
-        this.#rectangle.height = value;
-    }
+    set height(value) { this.#rectangle.height = value; }
 
-    get position() {
-        return this.#rectangle.position;
-    }
-    set position(value) {
-        this.#rectangle.position = value;
+    get position() { return this.#rectangle.position; }
+    set position(value) { this.#rectangle.position = value; }
+    
+    lastClickPosition: Vector|null = null;
+
+
+    onMouseDown(e: PointerEvent) {
+        e.preventDefault();
+        this.lastClickPosition = new Vector(e.clientX, e.clientY);
+        this.#menu?.show.set(true);
+        this.#menu?.position.set(this.lastClickPosition.substracted(10));
     }
 
     update() {

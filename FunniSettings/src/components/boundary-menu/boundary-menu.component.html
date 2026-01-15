@@ -1,0 +1,12 @@
+<span #root class="absolute z-1" oncontextmenu="return false" 
+	[style]="`left: ${position().x}px; top: ${position().y}px`"
+	(mouseenter)="onMouseEnter()"
+	(mouseleave)="onMouseLeave()"
+>
+@if (show()) {
+	<ul class="menu bg-base-200 rounded-box w-56">
+		<li onclick=""><a>Make primary</a></li>
+		<li><a>Remove</a></li>
+	</ul>
+}
+</span>

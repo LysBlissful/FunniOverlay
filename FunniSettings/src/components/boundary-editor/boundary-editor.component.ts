@@ -11,7 +11,7 @@ import { ɵEmptyOutletComponent } from "@angular/router";
     selector: "boundary-editor",
     templateUrl: "./boundary-editor.component.html",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [Boundary, ɵEmptyOutletComponent], 
+    imports: [ɵEmptyOutletComponent], 
 })
 export class BoundaryEditor {
 	boundaries: Boundary[] = [];
@@ -25,7 +25,6 @@ export class BoundaryEditor {
 		window.addEventListener("mouseup", this.#validateBoundary.bind(this));
 		window.addEventListener("mousemove", this.#resizeBoundary.bind(this));
 	}
-
 
 	#validateBoundary(event: MouseEvent) {
 		if (this.boundary != null) {
@@ -62,4 +61,6 @@ export class BoundaryEditor {
 		this.boundary.height = h;
 		this.boundary.update();
 	}
+
+
 }
